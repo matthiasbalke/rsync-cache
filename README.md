@@ -1,5 +1,7 @@
 # rsync-cache
-a simple cache based on rsync and ssh
+rsync-cache is a simple cache script based on rsync and ssh.
+
+I needed a simple and fast way to cache some parts of a jenkins pipeline - like resolved gradle dependencies - to speed up jenkins pipelines which do not have access to other cache systems.
 
 # usage
 
@@ -35,7 +37,7 @@ $ ./rsync-cache.sh \
     -u cache
 ```
 
-## Arguments
+## arguments
 | Argument | Default | Possible Values | Description |
 | -------- | ------- | --------------- | ----------- |
 | -a | cache | cache, restore, clear   | Action to perform |
