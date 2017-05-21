@@ -45,4 +45,5 @@ $ ./rsync-cache.sh \
 | -h | - | Hostname | Remote SSH Hostname |
 | -u | `$USER` | Username | Remote SSH Username |
 | -p | 22 | Port | Remote SSH Port |
-| -? |  |  | Displays usage info |
+| -S |  | - | Print transfer statistics |
+| -? |  | - | Displays usage info |

@@ -13,7 +13,7 @@ TARGET_HOST=
 TARGET_SSH_PORT=22
 TARGET_USER=$USER
 VERBOSE=
-PROGRESS="--stats --human-readable"
+STATS=
 
 ACTION=cache
 
@@ -41,6 +41,8 @@ show_help() {
 
  -p          Remote SSH Port
              default: 22
+
+ -S          Print transfer statistics
 
  -?          Displays this usage info
  "
@@ -77,6 +79,8 @@ while getopts "va:k:s:t:h:p:u:?" opt; do
         ;;
     v) VERBOSE=v
         ;;
+    S) STATS="--stats --human-readable"
+        ;;
     *) show_help
        ;;
     esac
@@ -95,7 +99,7 @@ fi
 case "$ACTION" in
 cache)
     echo "Creating/Updating cache '$CACHE_KEY'..."
-    rsync --numeric-ids $PROGRESS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $SOURCE_DIR/ $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY
+    rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $SOURCE_DIR/ $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY
     echo "Done."
     ;;
 restore)
@@ -108,7 +112,7 @@ restore)
         # ignore empty cache directory
         exit 0
     else
-        rsync --numeric-ids $PROGRESS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY/ $SOURCE_DIR
+        rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY/ $SOURCE_DIR
         echo "Done."
     fi
     ;;
