@@ -13,6 +13,7 @@ TARGET_HOST=
 TARGET_SSH_PORT=22
 TARGET_USER=$USER
 VERBOSE=
+PROGRESS="--stats --human-readable"
 
 ACTION=cache
 
@@ -62,11 +63,30 @@ echo "ACTION=$ACTION, \nCACHE_KEY=$CACHE_KEY, \nSOURCE_DIR=$SOURCE_DIR, \nTARGET
 case "$ACTION" in
 cache)
     rsync --numeric-ids $PROGRESS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $SOURCE_DIR/ $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY
+    echo "Cache '$CACHE_KEY' has been created/updated to '$TARGET_DIR/$CACHE_KEY'."
     ;;
 restore)
-    rsync --numeric-ids $PROGRESS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY/ $SOURCE_DIR
+    ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST "[[ -d "$TARGET_DIR/$CACHE_KEY" ]] || exit 42"
+    if [ $? == 42 ]
+    then
+        echo "Cache '$CACHE_KEY' does not exist."
+        # ignore empty cache directory
+        exit 0
+    else
+        rsync --numeric-ids $PROGRESS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY/ $SOURCE_DIR
+        echo "Cache '$CACHE_KEY' has been restored to '$SOURCE_DIR'."
+    fi
     ;;
 clear)
-    ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST rm -rf $TARGET_DIR/$CACHE_KEY
+    ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST "[[ -d "$TARGET_DIR/$CACHE_KEY" ]] || exit 42"
+    if [ $? == 42 ]
+    then
+        echo "Cache '$CACHE_KEY' does not exist."
+        # ignore empty cache directory
+        exit 0
+    else
+        ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST rm -rf $TARGET_DIR/$CACHE_KEY
+        echo "Cache '$CACHE_KEY' has been cleared."
+    fi
     ;;
 esac
