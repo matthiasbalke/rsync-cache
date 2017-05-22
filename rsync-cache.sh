@@ -20,6 +20,8 @@ REMOTE_DIR=$RSYNC_CACHE_REMOTE_DIR
 REMOTE_HOST=$RSYNC_CACHE_REMOTE_HOST
 REMOTE_SSH_PORT=${RSYNC_CACHE_REMOTE_SSH_PORT:-22}
 REMOTE_USER=${RSYNC_CACHE_REMOTE_USER:-$USER}
+REMOTE_SSH_CIPHER=$RSYNC_CACHE_SSH_CIPHER
+REMOTE_SSH_MAC=$RSYNC_CACHE_SSH_MAC
 
 # activate flags by env values
 if [ "$RSYNC_CACHE_VERBOSE" ]
@@ -61,6 +63,10 @@ show_help() {
  -p          Remote SSH Port
              default: 22
 
+ -c          SSH Cipher
+
+ -m          SSH MAC
+
  -S          Print transfer statistics
 
  -?          Displays this usage info
@@ -69,7 +75,7 @@ show_help() {
     exit 0
 }
 
-while getopts "vsa:k:l:r:H:p:u:h?" opt; do
+while getopts "vsa:c:m:k:l:r:H:p:u:h?" opt; do
     case "$opt" in
     h | \?)
         show_help
@@ -96,6 +102,10 @@ while getopts "vsa:k:l:r:H:p:u:h?" opt; do
         ;;
     u) REMOTE_USER=$OPTARG
         ;;
+    c) REMOTE_SSH_CIPHER=$OPTARG
+        ;;
+    m) REMOTE_SSH_MAC=$OPTARG
+        ;;
     v) set_verbose
         ;;
     s) activate_stats
@@ -115,10 +125,25 @@ then
     show_help
 fi
 
+if [ "$REMOTE_SSH_CIPHER" ]
+then
+    REMOTE_SSH_CIPHERS="-c $REMOTE_SSH_CIPHER"
+fi
+
+if [ "$REMOTE_SSH_MAC" ]
+then
+    REMOTE_SSH_MACS="-m $REMOTE_SSH_MAC"
+fi
+
 case "$ACTION" in
 cache)
     echo "Creating/Updating cache '$CACHE_KEY'..."
-    rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $REMOTE_SSH_PORT" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
+
+    # T: turn off pseudo-tty to decrease cpu load on destination.
+    # c arcfour: use the weakest but fastest SSH encryption. Must specify "Ciphers arcfour" in sshd_config on destination.
+    # o Compression=no: Turn off SSH compression.
+    # x: turn off X forwarding if it is on by default.
+    rsync --numeric-ids $STATS -a$VERBOSE -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
     echo "Done."
     ;;
 restore)
@@ -130,7 +155,12 @@ restore)
         # ignore empty cache directory
         exit 0
     else
-        rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $REMOTE_SSH_PORT" $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY/ $LOCAL_DIR
+
+        # T: turn off pseudo-tty to decrease cpu load on destination.
+        # c arcfour: use the weakest but fastest SSH encryption. Must specify "Ciphers arcfour" in sshd_config on destination.
+        # o Compression=no: Turn off SSH compression.
+        # x: turn off X forwarding if it is on by default.
+        echo rsync --numeric-ids $STATS -a$VERBOSE -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY/ $LOCAL_DIR
         echo "Done."
     fi
     ;;

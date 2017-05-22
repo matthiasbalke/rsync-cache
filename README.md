@@ -47,6 +47,8 @@ $ ./rsync-cache.sh \
 | -h | - | Hostname | Remote SSH Hostname |
 | -u | `$USER` | Username | Remote SSH Username |
 | -p | 22 | Port | Remote SSH Port |
+| -c | - | SSH Cipher | Define SSH Cipher to use |
+| -m | - | SSH MAC | Define SSH MAC to use |
 | -s |  | - | Print transfer statistics |
 | -v |  | - | Activate verbose mode for rsync |
 | h / -? |  | - | Displays usage info |
@@ -63,6 +65,8 @@ As an alternative to arguments settings can be provided as environment variables
 | RSYNC_CACHE_REMOTE_HOST | Hostname | Remote SSH Hostname |
 | RSYNC_CACHE_REMOTE_USER | Username | Remote SSH Username |
 | RSYNC_CACHE_REMOTE_SSH_PORT | Port | Remote SSH Port |
+| RSYNC_CACHE_REMOTE_CIPHER | | SSH Cipher | Define SSH Cipher to use |
+| RSYNC_CACHE_SSH_MAC | | SSH MAC |  Define SSH MAC to use |
 | RSYNC_CACHE_VERBOSE |  | setting any value activates verbose mode | Activate verbose mode for rsync |
 | RSYNC_CACHE_STATS  |  | setting any value activates stags | Print transfer statistics |
 
