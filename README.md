@@ -48,7 +48,7 @@ $ ./rsync-cache.sh \
 | -u | `$USER` | Username | Remote SSH Username |
 | -p | 22 | Port | Remote SSH Port |
 | -c | - | SSH Cipher | Define SSH Cipher to use |
-| -m | - | SSH MAC | Define SSH MAC to use |
+| -m | - | SSH MAC | Define SSH MAC to use |
 | -s |  | - | Print transfer statistics |
 | -v |  | - | Activate verbose mode for rsync |
 | h / -? |  | - | Displays usage info |
