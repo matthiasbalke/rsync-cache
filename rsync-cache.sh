@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # A POSIX variable
 # Reset in case getopts has been used previously in the shell.
@@ -16,6 +16,10 @@ VERBOSE=
 STATS=
 
 ACTION=cache
+
+# check that needed binaries are installed
+hash rsync 2>/dev/null  || { echo "rsync-cache relies on rsync beeing installed. Please install it before using rsync-cache. Aborting.";  exit 2; }
+hash ssh 2>/dev/null    || { echo "rsync-cache relies on ssh beeing installed. Please install it before using rsync-cache. Aborting.";  exit 2; }
 
 show_help() {
 
