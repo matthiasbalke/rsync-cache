@@ -5,21 +5,21 @@
 OPTIND=1
 
 set_verbose() {
-    VERBOSE=v
+    VERBOSE="v"
 }
 
 activate_stats() {
     STATS="--stats --human-readable"
 }
 
-# Initialize variables with env values
-ACTION=$RSYNC_CACHE_ACTION
+# Initialize variables with env/default values
+ACTION=${RSYNC_CACHE_ACTION:-cache}
 CACHE_KEY=$RSYNC_CACHE_CACHE_KEY
-LOCAL_DIR=$RSYNC_CACHE_LOCAL_DIR
+LOCAL_DIR=${RSYNC_CACHE_LOCAL_DIR:-`pwd`}
 REMOTE_DIR=$RSYNC_CACHE_REMOTE_DIR
 REMOTE_HOST=$RSYNC_CACHE_REMOTE_HOST
-REMOTE_SSH_PORT=$RSYNC_CACHE_REMOTE_SSH_PORT
-REMOTE_USER=$RSYNC_CACHE_REMOTE_USER
+REMOTE_SSH_PORT=${RSYNC_CACHE_REMOTE_SSH_PORT:-22}
+REMOTE_USER=${RSYNC_CACHE_REMOTE_USER:-$USER}
 
 # activate flags by env values
 if [ "$RSYNC_CACHE_VERBOSE" ]
@@ -30,27 +30,6 @@ fi
 if [ "$RSYNC_CACHE_STATS" ]
 then
     activate_stats
-fi
-
-# Initialize variables with default values if not already set
-if [ ! "$ACTION" ]
-then
-    ACTION=cache
-fi
-
-if [ ! "$LOCAL_DIR" ]
-then
-    LOCAL_DIR=`pwd`
-fi
-
-if [ ! "$REMOTE_SSH_PORT" ]
-then
-    REMOTE_SSH_PORT=22
-fi
-
-if [ ! "$REMOTE_USER" ]
-then
-    REMOTE_USER=$USER
 fi
 
 # check that needed binaries are installed
@@ -144,8 +123,7 @@ cache)
     ;;
 restore)
     echo "Restoring cache '$CACHE_KEY' to '$LOCAL_DIR' ..."
-    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "[[ -d "$REMOTE_DIR/$CACHE_KEY" ]] || exit 42"
-    if [ $? == 42 ]
+    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
     then
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
@@ -158,8 +136,7 @@ restore)
     ;;
 clear)
     echo "Clearing cache '$CACHE_KEY' ..."
-    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "[[ -d "$REMOTE_DIR/$CACHE_KEY" ]] || exit 42"
-    if [ $? == 42 ]
+    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "test -d \"$REMOTE_DIR/$CACHE_KEY\""; 
     then
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
