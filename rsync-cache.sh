@@ -4,18 +4,54 @@
 # Reset in case getopts has been used previously in the shell.
 OPTIND=1
 
-# Initialize variables with default values
-CACHE_KEY=
+set_verbose() {
+    VERBOSE=v
+}
 
-SOURCE_DIR=`pwd`
-TARGET_DIR=
-TARGET_HOST=
-TARGET_SSH_PORT=22
-TARGET_USER=$USER
-VERBOSE=
-STATS=
+activate_stats() {
+    STATS="--stats --human-readable"
+}
 
-ACTION=cache
+# Initialize variables with env values
+ACTION=$RSYNC_CACHE_ACTION
+CACHE_KEY=$RSYNC_CACHE_CACHE_KEY
+LOCAL_DIR=$RSYNC_CACHE_LOCAL_DIR
+REMOTE_DIR=$RSYNC_CACHE_REMOTE_DIR
+REMOTE_HOST=$RSYNC_CACHE_REMOTE_HOST
+REMOTE_SSH_PORT=$RSYNC_CACHE_REMOTE_SSH_PORT
+REMOTE_USER=$RSYNC_CACHE_REMOTE_USER
+
+# activate flags by env values
+if [ "$RSYNC_CACHE_VERBOSE" ]
+then
+    set_verbose
+fi
+
+if [ "$RSYNC_CACHE_STATS" ]
+then
+    activate_stats
+fi
+
+# Initialize variables with default values if not already set
+if [ ! "$ACTION" ]
+then
+    ACTION=cache
+fi
+
+if [ ! "$LOCAL_DIR" ]
+then
+    LOCAL_DIR=`pwd`
+fi
+
+if [ ! "$REMOTE_SSH_PORT" ]
+then
+    REMOTE_SSH_PORT=22
+fi
+
+if [ ! "$REMOTE_USER" ]
+then
+    REMOTE_USER=$USER
+fi
 
 # check that needed binaries are installed
 hash rsync 2>/dev/null  || { echo "rsync-cache relies on rsync beeing installed. Please install it before using rsync-cache. Aborting.";  exit 2; }
@@ -54,9 +90,9 @@ show_help() {
     exit 0
 }
 
-while getopts "va:k:s:t:h:p:u:?" opt; do
+while getopts "vsa:k:l:r:H:p:u:h?" opt; do
     case "$opt" in
-    \?)
+    h | \?)
         show_help
         ;;
     a)
@@ -71,19 +107,19 @@ while getopts "va:k:s:t:h:p:u:?" opt; do
         ;;
     k) CACHE_KEY=$OPTARG
         ;;
-    s) SOURCE_DIR=$OPTARG
+    l) LOCAL_DIR=$OPTARG
         ;;
-    t) TARGET_DIR=$OPTARG
+    r) REMOTE_DIR=$OPTARG
         ;;
-    h) TARGET_HOST=$OPTARG
+    H) REMOTE_HOST=$OPTARG
         ;;
-    p) TARGET_SSH_PORT=$OPTARG
+    p) REMOTE_SSH_PORT=$OPTARG
         ;;
-    u) TARGET_USER=$OPTARG
+    u) REMOTE_USER=$OPTARG
         ;;
-    v) VERBOSE=v
+    v) set_verbose
         ;;
-    S) STATS="--stats --human-readable"
+    s) activate_stats
         ;;
     *) show_help
        ;;
@@ -95,7 +131,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 # check for mandatory arguments
-if [ ! "$CACHE_KEY" ] || [ ! "$SOURCE_DIR" ] || [ ! "$TARGET_DIR" ] || [ ! "$TARGET_HOST" ] || [ ! "$TARGET_SSH_PORT" ] || [ ! "$TARGET_USER" ]
+if [ ! "$CACHE_KEY" ] || [ ! "$LOCAL_DIR" ] || [ ! "$REMOTE_DIR" ] || [ ! "$REMOTE_HOST" ] || [ ! "$REMOTE_SSH_PORT" ] || [ ! "$REMOTE_USER" ]
 then
     show_help
 fi
@@ -103,12 +139,12 @@ fi
 case "$ACTION" in
 cache)
     echo "Creating/Updating cache '$CACHE_KEY'..."
-    rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $SOURCE_DIR/ $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY
+    rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $REMOTE_SSH_PORT" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
     echo "Done."
     ;;
 restore)
-    echo "Restoring cache '$CACHE_KEY' to '$SOURCE_DIR' ..."
-    ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST "[[ -d "$TARGET_DIR/$CACHE_KEY" ]] || exit 42"
+    echo "Restoring cache '$CACHE_KEY' to '$LOCAL_DIR' ..."
+    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "[[ -d "$REMOTE_DIR/$CACHE_KEY" ]] || exit 42"
     if [ $? == 42 ]
     then
         echo "Cache '$CACHE_KEY' does not exist."
@@ -116,13 +152,13 @@ restore)
         # ignore empty cache directory
         exit 0
     else
-        rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $TARGET_SSH_PORT" $TARGET_USER@$TARGET_HOST:$TARGET_DIR/$CACHE_KEY/ $SOURCE_DIR
+        rsync --numeric-ids $STATS -az$VERBOSE -e "ssh -p $REMOTE_SSH_PORT" $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY/ $LOCAL_DIR
         echo "Done."
     fi
     ;;
 clear)
     echo "Clearing cache '$CACHE_KEY' ..."
-    ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST "[[ -d "$TARGET_DIR/$CACHE_KEY" ]] || exit 42"
+    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "[[ -d "$REMOTE_DIR/$CACHE_KEY" ]] || exit 42"
     if [ $? == 42 ]
     then
         echo "Cache '$CACHE_KEY' does not exist."
@@ -130,7 +166,7 @@ clear)
         # ignore empty cache directory
         exit 0
     else
-        ssh -p $TARGET_SSH_PORT $TARGET_USER@$TARGET_HOST rm -rf $TARGET_DIR/$CACHE_KEY
+        ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST rm -rf $REMOTE_DIR/$CACHE_KEY
         echo "Done."
     fi
     ;;
