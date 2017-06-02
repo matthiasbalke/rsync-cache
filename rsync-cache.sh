@@ -143,7 +143,7 @@ cache)
     # c arcfour: use the weakest but fastest SSH encryption. Must specify "Ciphers arcfour" in sshd_config on destination.
     # o Compression=no: Turn off SSH compression.
     # x: turn off X forwarding if it is on by default.
-    rsync --numeric-ids $STATS -a$VERBOSE -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
+    rsync --numeric-ids $STATS -a$VERBOSE --delete -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
     echo "Done."
     ;;
 restore)
