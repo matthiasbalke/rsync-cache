@@ -3,8 +3,16 @@ machine:
     - docker
 
 dependencies:
+  cache_directories:
+    - "~/docker"
+
+  pre:
+    - if [[ -e ~/docker/sshd.tar ]]; then docker load --input ~/docker/sshd.tar; fi
+
   override: 
-    - echo "skipping dependencies phase"
+    - docker pull rastasheep/ubuntu-sshd:14.04
+    - mkdir -p ~/docker
+    - docker save rastasheep/ubuntu-sshd:14.04 > ~/docker/sshd.tar
 
 test:
   override:
