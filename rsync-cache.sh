@@ -22,6 +22,7 @@ REMOTE_SSH_PORT=${RSYNC_CACHE_REMOTE_SSH_PORT:-22}
 REMOTE_USER=${RSYNC_CACHE_REMOTE_USER:-$USER}
 REMOTE_SSH_CIPHER=$RSYNC_CACHE_SSH_CIPHER
 REMOTE_SSH_MAC=$RSYNC_CACHE_SSH_MAC
+REMOTE_SSH_OPTS=$RSYNC_CACHE_REMOTE_SSH_OPTS
 
 # activate flags by env values
 if [ "$RSYNC_CACHE_VERBOSE" ]
@@ -75,7 +76,7 @@ show_help() {
     exit 0
 }
 
-while getopts "vsa:c:m:k:l:r:H:p:u:h?" opt; do
+while getopts "vsa:c:m:o:k:l:r:H:p:u:h?" opt; do
     case "$opt" in
     h | \?)
         show_help
@@ -105,6 +106,8 @@ while getopts "vsa:c:m:k:l:r:H:p:u:h?" opt; do
     c) REMOTE_SSH_CIPHER=$OPTARG
         ;;
     m) REMOTE_SSH_MAC=$OPTARG
+        ;;
+    o) REMOTE_SSH_OPTS=$OPTARG
         ;;
     v) set_verbose
         ;;
@@ -143,12 +146,12 @@ cache)
     # c arcfour: use the weakest but fastest SSH encryption. Must specify "Ciphers arcfour" in sshd_config on destination.
     # o Compression=no: Turn off SSH compression.
     # x: turn off X forwarding if it is on by default.
-    rsync --numeric-ids $STATS -a$VERBOSE --delete -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
+    rsync --numeric-ids $STATS -a$VERBOSE --delete -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS $REMOTE_SSH_OPTS -o Compression=no -x" $LOCAL_DIR/ $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY
     echo "Done."
     ;;
 restore)
     echo "Restoring cache '$CACHE_KEY' to '$LOCAL_DIR' ..."
-    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
+    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
     then
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
@@ -160,20 +163,20 @@ restore)
         # c arcfour: use the weakest but fastest SSH encryption. Must specify "Ciphers arcfour" in sshd_config on destination.
         # o Compression=no: Turn off SSH compression.
         # x: turn off X forwarding if it is on by default.
-        rsync --numeric-ids $STATS -a$VERBOSE -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS -o Compression=no -x" $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY/ $LOCAL_DIR
+        rsync --numeric-ids $STATS -a$VERBOSE -e "ssh -p $REMOTE_SSH_PORT -T $REMOTE_SSH_CIPHERS $REMOTE_SSH_MACS $REMOTE_SSH_OPTS -o Compression=no -x" $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/$CACHE_KEY/ $LOCAL_DIR
         echo "Done."
     fi
     ;;
 clear)
     echo "Clearing cache '$CACHE_KEY' ..."
-    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST "test -d \"$REMOTE_DIR/$CACHE_KEY\""; 
+    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\""; 
     then
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
         # ignore empty cache directory
         exit 0
     else
-        ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST rm -rf $REMOTE_DIR/$CACHE_KEY
+        ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS rm -rf $REMOTE_DIR/$CACHE_KEY
         echo "Done."
     fi
     ;;
