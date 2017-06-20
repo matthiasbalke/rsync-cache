@@ -1,0 +1,11 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override: 
+    - echo "skipping dependencies phase"
+
+test:
+  override:
+    - cd integration-test && ./run.sh
