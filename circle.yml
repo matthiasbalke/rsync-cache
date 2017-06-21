@@ -14,7 +14,7 @@ dependencies:
     - docker pull rastasheep/ubuntu-sshd:14.04
     - mkdir -p ~/docker
     - docker save rastasheep/ubuntu-sshd:14.04 > ~/docker/sshd.tar
-    - cd integration-test && build.sh
+    - cd integration-test && ./build.sh
     - docker save matthiasbalke/rsync-cache-integration-test:latest > ~/docker/integration-test.tar
 
 test:
