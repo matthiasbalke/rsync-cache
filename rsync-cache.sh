@@ -151,8 +151,16 @@ cache)
     ;;
 restore)
     echo "Restoring cache '$CACHE_KEY' to '$LOCAL_DIR' ..."
-    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
+    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
+    SSH_EXIT=$?
+    if [ $SSH_EXIT -ne 0 ]
     then
+        # if there was an error connecting via ssh pass the exit code
+        if [ $SSH_EXIT -eq 255 ]
+        then
+            exit 255
+        fi
+
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
         # ignore empty cache directory
@@ -169,14 +177,32 @@ restore)
     ;;
 clear)
     echo "Clearing cache '$CACHE_KEY' ..."
-    if ! ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\""; 
+    ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS "test -d \"$REMOTE_DIR/$CACHE_KEY\"";
+    SSH_EXIT=$?
+    if [ $SSH_EXIT -ne 0 ]
     then
+        # if there was an error connecting via ssh pass the exit code
+        if [ $SSH_EXIT -eq 255 ]
+        then
+            exit 255
+        fi
+
         echo "Cache '$CACHE_KEY' does not exist."
         echo "Done."
         # ignore empty cache directory
         exit 0
     else
         ssh -p $REMOTE_SSH_PORT $REMOTE_USER@$REMOTE_HOST $REMOTE_SSH_OPTS rm -rf $REMOTE_DIR/$CACHE_KEY
+        SSH_EXIT=$?
+        if [ $SSH_EXIT -ne 0 ]
+        then
+            # if there was an error connecting via ssh pass the exit code
+            if [ $SSH_EXIT -eq 255 ]
+            then
+                exit 255
+            fi
+        fi
+
         echo "Done."
     fi
     ;;
