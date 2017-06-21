@@ -13,14 +13,26 @@ function assertEmptyDir {
     fi
 }
 
+function assertSuccessfulExit  {
+    LAST_EXIT=$?
+    if [ "$LAST_EXIT" -ne "0" ]
+    then
+        echo "Last action was not successfull. Aborting!"
+        exit $LAST_EXIT
+    fi
+}
+
+# load ssh agent to connect to docker container
+eval $(ssh-agent -s)
+$(ssh-add integration-test-auth)
 
 # start ssh server
-DOCKER_ID=$(docker run -d -P \
+DOCKER_ID=$(docker run -d -P --rm \
     -v `pwd`/source:/mnt/source \
     -v `pwd`/cache:/mnt/cache \
     -v `pwd`/cache_restore:/mnt/cache_restore \
     -v `pwd`/remote:/mnt/remote \
-    rastasheep/ubuntu-sshd:14.04)
+    matthiasbalke/rsync-cache-integration-test:latest)
 
 echo "Docker ID: $DOCKER_ID" 
 
@@ -42,9 +54,10 @@ EXIT_CODE=0
 export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
 
 ../rsync-cache.sh -a restore -k restore
+assertSuccessfulExit
 
-# restore should be empty
 echo "Restoring empty cache"
+# restore should be empty
 assertEmptyDir
 
 # stopping ssh server

@@ -8,11 +8,14 @@ dependencies:
 
   pre:
     - if [[ -e ~/docker/sshd.tar ]]; then docker load --input ~/docker/sshd.tar; fi
+    - if [[ -e ~/docker/integration-test.tar ]]; then docker load --input ~/docker/integration-test.tar; fi
 
   override: 
     - docker pull rastasheep/ubuntu-sshd:14.04
     - mkdir -p ~/docker
     - docker save rastasheep/ubuntu-sshd:14.04 > ~/docker/sshd.tar
+    - cd integration-test && build.sh
+    - docker save matthiasbalke/rsync-cache-integration-test:latest > ~/docker/integration-test.tar
 
 test:
   override:
