@@ -61,6 +61,27 @@ echo "Restoring empty cache"
 # restore should be empty
 assertEmptyDir
 
+# test: cache source dir
+../rsync-cache.sh -a cache -k cache
+assertSuccessfulExit
+echo ""
+echo "Caching source dir"
+# cache should be equal to source
+diff -r `pwd`/source `pwd`/cache
+assertSuccessfulExit
+
+# test: restore cached source dir
+export RSYNC_CACHE_LOCAL_DIR=`pwd`/cache_restore
+../rsync-cache.sh -a restore -k cache
+assertSuccessfulExit
+echo ""
+echo "Caching source dir"
+# cache should be equal to source
+diff -r `pwd`/source `pwd`/cache_restore
+assertSuccessfulExit
+
+export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
+
 echo ""
 # stopping ssh server
 echo "Shutting down docker sshd server ..."
