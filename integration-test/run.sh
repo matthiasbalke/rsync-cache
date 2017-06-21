@@ -27,7 +27,7 @@ eval $(ssh-agent -s)
 $(ssh-add integration-test-auth)
 
 # start ssh server
-DOCKER_ID=$(docker run -d -P --rm \
+DOCKER_ID=$(docker run -d -P \
     -v `pwd`/source:/mnt/source \
     -v `pwd`/cache:/mnt/cache \
     -v `pwd`/cache_restore:/mnt/cache_restore \
