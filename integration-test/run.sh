@@ -65,7 +65,6 @@ echo ""
 # stopping ssh server
 echo "Shutting down docker sshd server ..."
 docker stop $DOCKER_ID > /dev/null
-docker rm $DOCKER_ID > /dev/null
 echo "done."
 
 exit $EXIT_CODE

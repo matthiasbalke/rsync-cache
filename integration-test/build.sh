@@ -1,1 +1,1 @@
-docker build -t matthiasbalke/rsync-cache-integration-test:latest .
+docker build -t --rm=false matthiasbalke/rsync-cache-integration-test:latest .
