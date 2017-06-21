@@ -24,8 +24,11 @@ function assertSuccessfulExit  {
 
 # load ssh agent to connect to docker container
 eval $(ssh-agent -s)
+chmod 400 integration-test-auth
 $(ssh-add integration-test-auth)
 
+echo ""
+echo "Starting docker sshd server ..."
 # start ssh server
 DOCKER_ID=$(docker run -d -P \
     -v `pwd`/source:/mnt/source \
@@ -33,9 +36,10 @@ DOCKER_ID=$(docker run -d -P \
     -v `pwd`/cache_restore:/mnt/cache_restore \
     -v `pwd`/remote:/mnt/remote \
     matthiasbalke/rsync-cache-integration-test:latest)
+echo "done."
 
-echo "Docker ID: $DOCKER_ID" 
 
+echo ""
 # common settings
 export RSYNC_CACHE_REMOTE_HOST=localhost
 export RSYNC_CACHE_REMOTE_SSH_PORT=$(docker port $DOCKER_ID 22 | cut -d ':' -f 2)
@@ -45,9 +49,6 @@ export RSYNC_CACHE_VERBOSE=true
 export RSYNC_CACHE_STATS=true
 export RSYNC_CACHE_REMOTE_DIR=/mnt
 
-echo "SSH Port:  $RSYNC_CACHE_REMOTE_SSH_PORT"
-echo ""
-
 EXIT_CODE=0
 
 # test: restore empty cache
@@ -55,13 +56,16 @@ export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
 
 ../rsync-cache.sh -a restore -k restore
 assertSuccessfulExit
-
+echo ""
 echo "Restoring empty cache"
 # restore should be empty
 assertEmptyDir
 
+echo ""
 # stopping ssh server
+echo "Shutting down docker sshd server ..."
 docker stop $DOCKER_ID > /dev/null
 docker rm $DOCKER_ID > /dev/null
+echo "done."
 
 exit $EXIT_CODE
