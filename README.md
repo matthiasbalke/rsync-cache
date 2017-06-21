@@ -1,3 +1,5 @@
+[![Build Status](https://circleci.com/gh/matthiasbalke/rsync-cache.svg?style=shield&circle-token=3df59c65db61233a579a4b8d2b5c2a77b721dd37)](https://circleci.com/gh/matthiasbalke/rsync-cache)
+
 # rsync-cache
 rsync-cache is a simple cache script based on rsync and ssh.
 
