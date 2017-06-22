@@ -24,9 +24,9 @@ function assertSuccessfulExit  {
 }
 
 # load ssh agent to connect to docker container
-#eval $(ssh-agent -s)
+eval $(ssh-agent -s)
 chmod 400 integration-test-auth
-#$(ssh-add integration-test-auth)
+ssh-add integration-test-auth
 
 echo ""
 echo "Starting docker sshd server ..."
@@ -45,7 +45,7 @@ echo ""
 export RSYNC_CACHE_REMOTE_HOST=localhost
 export RSYNC_CACHE_REMOTE_SSH_PORT=$(docker port $DOCKER_ID 22 | cut -d ':' -f 2)
 export RSYNC_CACHE_REMOTE_USER=root
-export RSYNC_CACHE_REMOTE_SSH_OPTS='-oStrictHostKeyChecking=no -i integration-test-auth -v'
+export RSYNC_CACHE_REMOTE_SSH_OPTS='-oStrictHostKeyChecking=no -v'
 export RSYNC_CACHE_VERBOSE=true
 export RSYNC_CACHE_STATS=true
 export RSYNC_CACHE_REMOTE_DIR=/mnt
