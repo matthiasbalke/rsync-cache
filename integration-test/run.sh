@@ -20,6 +20,7 @@ function assertSuccessfulExit  {
         echo "Last action was not successfull. Aborting!"
         exit $LAST_EXIT
     fi
+    echo "  ++ Success!"
 }
 
 # load ssh agent to connect to docker container
@@ -54,13 +55,16 @@ EXIT_CODE=0
 # test: restore empty cache
 export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
 
+mkdir restore
 ../rsync-cache.sh -a restore -k restore
 assertSuccessfulExit
 echo ""
 echo "Restoring empty cache"
 # restore should be empty
 assertEmptyDir
+rm -rf restore
 
+mkdir cache
 # test: cache source dir
 ../rsync-cache.sh -a cache -k cache
 assertSuccessfulExit
@@ -69,7 +73,9 @@ echo "Caching source dir"
 # cache should be equal to source
 diff -r `pwd`/source `pwd`/cache
 assertSuccessfulExit
+rm -rf cache
 
+mkdir cache_restore
 # test: restore cached source dir
 export RSYNC_CACHE_LOCAL_DIR=`pwd`/cache_restore
 ../rsync-cache.sh -a restore -k cache
@@ -79,6 +85,7 @@ echo "Caching source dir"
 # cache should be equal to source
 diff -r `pwd`/source `pwd`/cache_restore
 assertSuccessfulExit
+rm -rf cache_restore
 
 export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
 
