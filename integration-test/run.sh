@@ -73,7 +73,6 @@ echo "Caching source dir"
 # cache should be equal to source
 diff -r `pwd`/source `pwd`/cache
 assertSuccessfulExit
-rm -rf cache
 
 mkdir cache_restore
 # test: restore cached source dir
@@ -85,6 +84,7 @@ echo "Caching source dir"
 # cache should be equal to source
 diff -r `pwd`/source `pwd`/cache_restore
 assertSuccessfulExit
+rm -rf cache
 rm -rf cache_restore
 
 export RSYNC_CACHE_LOCAL_DIR=`pwd`/source
